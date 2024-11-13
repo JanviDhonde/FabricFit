@@ -1,0 +1,84 @@
+apply plugin: "jacoco"
+apply plugin: "org.sonarqube"
+
+jacoco {
+  toolVersion = "0.8.6"
+}
+
+tasks.withType(Test) {
+  jacoco.includeNoLocationClasses = true
+  jacoco.excludes = ['jdk.internal.*']
+  jacoco.excludes = ['**new Function**']
+}
+
+def excludeFileFilter = [
+    '**/mock/**',
+    '**/api/**',
+    '**/di/**',
+    '**/mapper/**',
+    '**/model/**',
+    '**/feature/**/view/**',
+    '**/feature/**/adapter/**',
+    '**/config/**',
+    '**/feature/faceSwap/**',
+    '**/tailormade_chat/core/repository/**',
+    '**/TailorMadeApplication**'
+]
+
+def coverageMainSourceDirs = [
+    "${rootProject.projectDir}/features/tailormade_auth/src/main/java",
+    "${rootProject.projectDir}/features/tailormade_chat/src/main/java",
+    "${rootProject.projectDir}/features/tailormade_design_detail/src/main/java",
+    "${rootProject.projectDir}/features/tailormade_profile/src/main/java",
+    "${rootProject.projectDir}/features/tailormade_search/src/main/java",
+    "app/src/main/java",
+    "tailor-app/src/main/java"
+]
+
+def coverageKotlinClassDirectories = [
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_auth/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_chat/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_design_detail/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_profile/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_search/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "app/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "tailor-app/build/tmp/kotlin-classes/debug", excludes: excludeFileFilter)
+]
+
+def coverageClassDirectories = [
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_auth/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_chat/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_design_detail/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_profile/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${rootProject.projectDir}/features/tailormade_search/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "${buildDir}/build/intermediates/classes/debug", excludes: excludeFileFilter),
+    fileTree(dir: "tailor-app/build/intermediates/classes/debug", excludes: excludeFileFilter)
+]
+
+task jacocoTestReport(type: JacocoReport, dependsOn: [
+    "features:tailormade_auth:testDebugUnitTest",
+    "features:tailormade_chat:testDebugUnitTest",
+    "features:tailormade_design_detail:testDebugUnitTest",
+    "features:tailormade_profile:testDebugUnitTest",
+    "features:tailormade_search:testDebugUnitTest",
+    "app:testDebugUnitTest",
+    "tailor-app:testDebugUnitTest"
+]) {
+  group = "Reporting"
+  description = "Generate Jacoco coverage reports after running tests."
+  reports {
+    xml.enabled = true
+    html.enabled = true
+  }
+  sourceDirectories.from = files([coverageMainSourceDirs])
+  classDirectories.from = files([coverageClassDirectories, coverageKotlinClassDirectories])
+  executionData.from = files([
+      "${rootProject.projectDir}/features/tailormade_auth/jacoco.exec",
+      "${rootProject.projectDir}/features/tailormade_chat/jacoco.exec",
+      "${rootProject.projectDir}/features/tailormade_design_detail/jacoco.exec",
+      "${rootProject.projectDir}/features/tailormade_profile/jacoco.exec",
+      "${rootProject.projectDir}/features/tailormade_search/jacoco.exec",
+      "app/jacoco.exec",
+      "tailor-app/jacoco.exec"
+  ])
+}
